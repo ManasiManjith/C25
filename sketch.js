@@ -1,96 +1,73 @@
 const Engine = Matter.Engine;
+const Render = Matter.Render;
 const World = Matter.World;
 const Bodies = Matter.Bodies;
 const Constraint = Matter.Constraint;
+const Body = Matter.Body;
+const Composites = Matter.Composites;
+const Composite = Matter.Composite;
 
-var engine, world, backgroundImg,boat;
-var canvas, angle, tower, ground, cannon;
-var balls = [];
-var boats = [];
+let engine;
+let world;
+var ground, bridge;
+var leftWall, rightWall;
+var jointPoint;
+var jointLink;
 
-function preload() {
-  backgroundImg = loadImage("./assets/background.gif");
-  towerImage = loadImage("./assets/tower.png");
-}
+var stones = [];
 
 function setup() {
-  canvas = createCanvas(1200, 600);
+  createCanvas(windowWidth, windowHeight);
   engine = Engine.create();
   world = engine.world;
-  angleMode(DEGREES)
-  angle = 15
+  frameRate(80);
 
-  ground = Bodies.rectangle(0, height - 1, width * 2, 1, { isStatic: true });
-  World.add(world, ground);
+  ground = new Base(0, height - 10, width * 2, 20, "#795548", true);
+  leftWall = new Base(300, height / 2 + 50, 600, 100, "#8d6e63", true);
+  rightWall = new Base(width - 300, height / 2 + 50, 600, 100, "#8d6e63", true);
 
-  tower = Bodies.rectangle(160, 350, 160, 310, { isStatic: true });
-  World.add(world, tower);
+  /*bridge = new Base(15, { x: width / 2 - 400, y: height / 2 });
+  jointPoint = new Base(width - 600, height / 2 + 10, 40, 20, "#8d6e63", true);*/
 
-  cannon = new Cannon(180, 110, 130, 100, angle);
+  bridge = new Bridge(15, { x: width / 2 - 400, y: height / 2 });
+  jointPoint = new Base(width - 600, height / 2 + 10, 40, 20, "#8d6e63", true);
+
+  /*bridge = new Base(15, { x: width / 2 - 400, y: height / 2 });
+  jointPoint = new Bridge(width - 600, height / 2 + 10, 40, 20, "#8d6e63", true);*/
+
+  /*bridge = new Bridge(15, { x: width / 2 - 400, y: height / 2 });
+  jointPoint = new Bridge(width - 600, height / 2 + 10, 40, 20, "#8d6e63", true);*/
+
+  
+  Matter.Composite.add(bridge.body, jointPoint);
+
+  //Matter.Composite.add(jointPoint);
+  
+  //Matter.Composite.add(jointPoint, bridge.body);
+  
+  //Matter.Composite.add(bridge.body);
+
+
+  jointLink = new Link(bridge, jointPoint);
+
+  for (var i = 0; i <= 8; i++) {
+    var x = random(width / 2 - 200, width / 2 + 300);
+    var y = random(-10, 140);
+    var stone = new Stone(x, y, 80, 80);
+    stones.push(stone);
+  }
 }
 
 function draw() {
-  background(189);
-  image(backgroundImg, 0, 0, width, height);
-
+  background(51);
   Engine.update(engine);
 
-  
-  rect(ground.position.x, ground.position.y, width * 2, 1);
- 
+  ground.show();
+  bridge.show();
+  leftWall.show();
+  rightWall.show();
 
-  push();  
-  imageMode(CENTER);
-  image(towerImage,tower.position.x, tower.position.y, 160, 310);
-  pop();
-
-showBoats()  
-
-  for (var i = 0; i < balls.length; i++) {
-    showCannonBalls(balls[i], i);
-  }
-
-  cannon.display();
-}
-
-function keyPressed() {
-  if (keyCode === DOWN_ARROW) {
-    var cannonBall = new CannonBall(cannon.x, cannon.y);
-    cannonBall.trajectory = [];
-    Matter.Body.setAngle(cannonBall.body, cannon.angle);
-    balls.push(cannonBall);
-  }
-}
-
-function showCannonBalls(ball, index) {
-  if (ball) {
-    ball.display();
-  }
-}
-
-function showBoats (){
-  if (boats.length>0){
-if (boats[boats.length-1]===undefined || boats[boats.length-1].body.position.x<width-300){
-  var positions = [-40,-60,-70,-20]
-  var p = random(positions)
-  boat = new Boat(width, height - 60, 170, 170,p);
-  boats.push(boat)
-}
-for(var i=0;i<boats.length;i++){
-  if(boats[i]){
-    Matter.Body.setVelocity(boats[i].body,{x:-1,y:0})
-    boats[i].display()
-  }
-}
-  }
-  else{
-    boat = new Boat(width, height - 60, 170, 170,-80);
-    boats.push(boat)
-  }
-}
-
-function keyReleased() {
-  if (keyCode === DOWN_ARROW) {
-    balls[balls.length - 1].shoot();
+  for (var stone of stones) {
+    stone.show();
   }
 }
